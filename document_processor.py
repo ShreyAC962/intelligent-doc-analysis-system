@@ -74,6 +74,40 @@ class DocumentProcessor:
             logger.info(f"Eroor uploading document : {e}")
             raise
 
+
+    def extract_text_from_pdf(self, file_content : bytes) -> str:
+        # Extract text from PDF files
+        try:
+            pdf_file = io.BytesIO(file_content)
+            pdf_reader = PyPDF2.PdfFileReader(pdf_file)
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text() + "\n"
+
+            logger.info(f"Extracted {len(text)} characters from PDF")
+            return text
+        except Exception as e:
+            logger.error(f"Error extracting PDF text : {e}")
+            raise
+
+    
+    def extract_text_from_docx(self, file_content : bytes) -> str:
+        # Word files have complex formatting : we need just the text
+        try:
+            docx_file = io.BytesIO(file_content)
+            doc = Document(docx_file) 
+
+            text = ""
+            for paragraph in doc.paragraphs:
+                text += paragraph.text + "\n"
+
+            logger.info(f"Extracted {len(text)} characters from DOCX")
+            return text
+        
+        except Exception as e:
+            logger.error(f"Error extracting DOCX text : {e}")
+            raise
+
     def extract_text(self, file_content : bytes, file_type : str) -> str:
             # Extract text from any supported file type
             if file_type.lower() == 'pdf':
@@ -104,9 +138,99 @@ class DocumentProcessor:
         
         logger.info(f"Split text into {len(chunks)} chunks")
         return chunks
+    
+    def create_embeddings(self, texts: List[str]) -> List[List[float]]:
+        # Convert text into vector embeddings
+        # Similar texts have similar numeric vectors
+
+        # Using Google's embedding model(Trained on billions of documents)
+        # Each text becomes a list of 768 numbers
+        try:
+            # Process in batch - API has limits
+            embeddings = []
+            batch_size = settings.embedding_batch_size
+            for i in range(0, len(texts), batch_size):
+                batch = texts[i : i + batch_size]
+
+                # Call Vertex AI Embedding API
+                embeddings_response = self.embedding_model.get_embeddings(batch)
+
+                # Extract the vectors
+                batch_embeddings = [emb.values for emb in embeddings_response]
+                embeddings.append(batch_embeddings)
+            
+            logger.info(f"Created {len(embeddings)} embeddings")
+            return embeddings
+        
+        except Exception as e:
+            logger.error(f"Error creating embeddings : {e}")
+            raise
+    
+    def process_document(self, file_path : str, file_content : bytes, file_type: str) -> Dict:
+
+    # Complete document processing pipeline
+    # Upload to Cloud Storage -> Extract text -> Chunk text -> Create embeddings -> Return results for indexing
+        try:
+            # Generate unique document ID
+            doc_id = hashlib.md5(file_content).hexdigest()
+
+            # Upload the document
+            gcs_uri = self.upload_document(file_path, file_content, {
+                'doc_id' : doc_id,
+                'file_type' : file_type,
+                'processed_at' : datetime.now().isoformat()
+            })
+
+            # Extract text
+            text = self.extract_text(file_content, file_type)
+
+            # Chunk text
+            chunks = self.chunk_text(text)
+
+            # Create embeddings
+            emeddings = self.create_embeddings(chunks)
+
+            # Prepare result
+            result = {
+                'doc_id' : doc_id,
+                'gcs_uri' : gcs_uri,
+                'file_type' : file_type,
+                'num_chunks' : len(chunks),
+                'embeddings' : emeddings,
+                'processed_at' : datetime.now().isoformat()
+            }
+
+            logger.info(f"Processed document : {doc_id}")
+            return result
+        
+        except Exception as e:
+            logger.error(f"Error processing documents: {e}")
+            raise
+
+# Example usage for testing
+if __name__ == "__main__":
+    # Initialize processor
+    processor = DocumentProcessor()
+
+    sample_text = b"This is a sample document about machine learning and AI."
+
+    result = processor.process_document(
+        file_path = "samples/test.txt",
+        file_content = sample_text,
+        file_type = "txt" 
+    )
+
+    print(f"Document processed: {result['doc_id']}")
+    print(f"Number of chunks: {result['num_chunks']}")
+    print(f"Embedding dimensions: {len(result['embeddings'][0])}")
+ 
+                
+
+        
 
 
            
+
                       
 
 
