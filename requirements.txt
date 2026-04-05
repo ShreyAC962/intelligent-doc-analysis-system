@@ -1,7 +1,7 @@
 # Core ML Libraries
-tensorflow==2.15.0
-jax[cpu]==0.4.20
-jaxlib==0.4.20
+tensorflow==2.21.0
+jax[cpu]==0.4.38
+jaxlib==0.4.38
 xgboost==2.0.3
 
 # Google Cloud Libraries
