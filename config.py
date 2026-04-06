@@ -42,9 +42,13 @@ class Settings(BaseSettings):
     anomaly_table_id: str = Field(default="detected_anomalies", env="ANOMALY_TABLE_ID")
     
     # Vertex AI Configuration
+    # Vertex AI Configuration
     vertex_ai_location: str = Field(default="us-central1", env="VERTEX_AI_LOCATION")
-    gemini_model: str = Field(default="gemini-1.5-pro-001", env="GEMINI_MODEL")
-    embedding_model: str = Field(default="textembedding-gecko@003", env="EMBEDDING_MODEL")
+    gemini_model: str = Field(default="gemini-2.5-flash", env="GEMINI_MODEL")
+    embedding_model: str = Field(default="text-embedding-004", env="EMBEDDING_MODEL")
+
+# Google AI API Key (optional - for direct API access)
+    google_ai_api_key: Optional[str] = Field(None, env="GOOGLE_AI_API_KEY")
     
     # Vector Search Configuration
     index_endpoint_name: str = Field(..., env="INDEX_ENDPOINT_NAME")
