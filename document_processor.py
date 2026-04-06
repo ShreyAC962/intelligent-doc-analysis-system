@@ -79,7 +79,7 @@ class DocumentProcessor:
         # Extract text from PDF files
         try:
             pdf_file = io.BytesIO(file_content)
-            pdf_reader = PyPDF2.PdfFileReader(pdf_file)
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
             text = ""
             for page in pdf_reader.pages:
                 text += page.extract_text() + "\n"
@@ -117,7 +117,7 @@ class DocumentProcessor:
             elif file_type.lower() == 'txt':  
                 return file_content.decode('utf-8')
             else:
-                raise ValueError("Unsupported file type : {file_type}") 
+                raise ValueError(f"Unsupported file type: {file_type}")
 
 
     def chunk_text(self, text : str, chunk_size: int = 1000, overlap : int = 200) -> List[str]:
@@ -157,7 +157,7 @@ class DocumentProcessor:
 
                 # Extract the vectors
                 batch_embeddings = [emb.values for emb in embeddings_response]
-                embeddings.append(batch_embeddings)
+                embeddings.extend(batch_embeddings)
             
             logger.info(f"Created {len(embeddings)} embeddings")
             return embeddings

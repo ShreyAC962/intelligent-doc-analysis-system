@@ -87,6 +87,27 @@ class Settings(BaseSettings):
     memory_limit: str = Field(default="4Gi", env="MEMORY_LIMIT")
     cpu_limit: str = Field(default="2", env="CPU_LIMIT")
     
+    # Cloud Run specific settings (NEW - these were missing!)
+    timeout: int = Field(default=300, env="TIMEOUT")
+    concurrency: int = Field(default=80, env="CONCURRENCY")
+    
+    # Rate Limiting (NEW - these were missing!)
+    max_requests_per_minute: int = Field(default=60, env="MAX_REQUESTS_PER_MINUTE")
+    max_gemini_calls_per_minute: int = Field(default=10, env="MAX_GEMINI_CALLS_PER_MINUTE")
+    max_embedding_calls_per_minute: int = Field(default=20, env="MAX_EMBEDDING_CALLS_PER_MINUTE")
+    
+    # Cost Optimization (NEW - these were missing!)
+    use_gemini_flash: bool = Field(default=True, env="USE_GEMINI_FLASH")
+    enable_embedding_cache: bool = Field(default=True, env="ENABLE_EMBEDDING_CACHE")
+    storage_class: str = Field(default="STANDARD", env="STORAGE_CLASS")
+    auto_delete_old_data: bool = Field(default=True, env="AUTO_DELETE_OLD_DATA")
+    data_retention_days: int = Field(default=30, env="DATA_RETENTION_DAYS")
+    
+    # Development flags (NEW - these were missing!)
+    debug: bool = Field(default=False, env="DEBUG")
+    use_mock_data: bool = Field(default=False, env="USE_MOCK_DATA")
+    skip_expensive_ops: bool = Field(default=False, env="SKIP_EXPENSIVE_OPS")
+    
     class Config:
         # This tells Pydantic to look for a .env file
         env_file = ".env"
@@ -117,9 +138,9 @@ def setup_google_credentials(settings: Settings) -> None:
     """
     if settings.service_account_key_path and os.path.exists(settings.service_account_key_path):
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = settings.service_account_key_path
-        print(f"✅ Google Cloud credentials configured: {settings.service_account_key_path}")
+        print(f"Google Cloud credentials configured: {settings.service_account_key_path}")
     else:
-        print("⚠️  No service account key found. Using default credentials.")
+        print("No service account key found. Using default credentials.")
 
 
 # Create global settings instance
