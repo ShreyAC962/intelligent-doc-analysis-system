@@ -144,3 +144,95 @@ class RAGSystem:
         except Exception as e:
             logger.error(f"Error generating answer: {e}")
             raise
+
+
+    def query(self, question: str, top_k : int = 5) -> Dict:
+        # Complete RAG pipeline : Retrieve(Vector Search) + Generate (Gemini AI)
+        try:
+            # Retrieve relevant documets
+            relevant_docs = self.retrieve_relevant_documents(question, top_k)
+            if not relevant_docs:
+                return {
+                    'query' : question,
+                    'answer' : "I couldm't find any relevant documents to answer your question.",
+                    'sources' : [],
+                    'confidence' : 'none',
+                    'num_sources_used' : 0
+                }
+            
+            # Generate answer
+            result = self.generate_answer(question, relevant_docs)
+            return result
+    
+        except Exception as e:
+            logger.error(f"Error in RAG query : {e}")
+            raise
+
+    
+    def summarize_documents(self, document_id : str) -> Dict:
+        # Summarize a specific document
+
+        # Retrieve all chunks of the document
+        # Send to Gemini with summarization prompt 
+        # Return concise summary
+        try:
+            # In production, retrieve document chunks from Vector Search
+            # Using Mock data
+            document_chunks = [
+                "Chapter 1: Introduction to machine learning...",
+                "Chapter 2: Data preprocessing techniques...",
+                "Chapter 3: Model training and evaluation..."
+            ]
+            # Combine chunks
+            full_text = "\n\n".join(document_chunks)
+
+            # Create summarization prompt
+            prompt = f"""Summarize the following document in 2-3 paragraphs.
+            Focus on key points, main findings, and actionable insights.
+            
+            Document:
+            {full_text}
+            
+            Summary:"""
+
+            # Generate Summary
+            response = self.model.generate_content(prompt)
+
+            result = {
+                'document_id' : document_id,
+                'summary' : response.text,
+                'original_length' : len(full_text),
+                'summary_length' : len(response.text),
+                'compression_ratio' : len(response.text)/len(full_text)
+            }
+
+            logger.info(f"Summarized document: {document_id}")
+            return result
+        
+        except Exception as e:
+            logger.info(f"Error summarizing document: {e}")
+            raise
+
+
+
+
+# Example Usage
+
+if __name__ == "__main__":
+    # Initialize RAG system
+    # In production, you'd pass the actual Vector Search endpoint
+    rag = RAGSystem(vector_search_index_endpoint="projects/xxx/locations/xxx/indexEndpoints/xxx")
+
+    # Ask a question
+    result = rag.query("What are the key features of machine learning?")
+    print("Question:", result['query'])
+    print("Answer:", result['answer'])
+    print("Sources:", result['sources'])
+
+    # Summarize a document
+    summary = rag.summarize_documents("doc123")
+    print("\nSummary:", summary['summary'])
+    print(f"Compression: {summary['compression_ratio']:.2%}")
+ 
+
+    
