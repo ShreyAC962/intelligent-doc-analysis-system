@@ -35,7 +35,7 @@ class RAGSystem:
             # Initialize Gemini model
             try:
                 self.model = GenerativeModel(model_name=settings.gemini_model)
-                logger.info("✅ Gemini model initialized")
+                logger.info("Gemini model initialized")
             except Exception as e:
                 logger.warning(f"Gemini model init failed: {e}. Using fallback 'gemini-1.5-flash'")
                 self.model = GenerativeModel(model_name="gemini-1.5-flash")
@@ -48,10 +48,10 @@ class RAGSystem:
             # Vector Search endpoint
             self.index_endpoint = vector_search_index_endpoint
 
-            logger.info("✅ RAG System initialized")
+            logger.info("RAG System initialized")
 
         except Exception as e:
-            logger.error(f"❌ RAG System initialization failed: {e}")
+            logger.error(f"RAG System initialization failed: {e}")
             raise
 
     def retrieve_relevant_documents(self, query: str, top_k: int = 5) -> List[Dict]:
@@ -76,11 +76,11 @@ class RAGSystem:
                 }
             ]
 
-            logger.info(f"✅ Retrieved {len(relevant_docs)} relevant documents")
+            logger.info(f"Retrieved {len(relevant_docs)} relevant documents")
             return relevant_docs
 
         except Exception as e:
-            logger.error(f"❌ Error retrieving documents: {e}")
+            logger.error(f"Error retrieving documents: {e}")
             return []
 
     def generate_answer(self, query: str, context_documents: List[Dict]) -> Dict:
@@ -102,20 +102,20 @@ class RAGSystem:
             ])
 
             prompt = f"""You are a helpful AI assistant. Answer the question based ONLY on the provided documents.
-If the documents don't contain enough information, say "I don't have enough information to answer that question."
+            If the documents don't contain enough information, say "I don't have enough information to answer that question."
 
-Documents:
-{context}
+            Documents:
+            {context}
 
-Question: {query}
+            Question: {query}
 
-Instructions:
-1. Answer based only on the provided documents
-2. Cite sources by mentioning the document name
-3. Be concise but thorough
-4. If uncertain, acknowledge it
+            Instructions:
+            1. Answer based only on the provided documents
+            2. Cite sources by mentioning the document name
+            3. Be concise but thorough
+            4. If uncertain, acknowledge it
 
-Answer:"""
+            Answer:"""
 
             response = self.model.generate_content(prompt)
             answer_text = response.text
@@ -129,7 +129,7 @@ Answer:"""
             }
 
         except Exception as e:
-            logger.error(f"❌ Error generating answer: {e}")
+            logger.error(f"Error generating answer: {e}")
             return {
                 'query': query,
                 'answer': "Error generating answer.",
@@ -155,12 +155,12 @@ Answer:"""
             full_text = "\n\n".join(document_chunks)
 
             prompt = f"""Summarize the following document in 2-3 paragraphs.
-Focus on key points, main findings, and actionable insights.
+                Focus on key points, main findings, and actionable insights.
 
-Document:
-{full_text}
+                Document:
+                {full_text}
 
-Summary:"""
+                Summary:"""
 
             response = self.model.generate_content(prompt)
 
@@ -173,7 +173,7 @@ Summary:"""
             }
 
         except Exception as e:
-            logger.error(f"❌ Error summarizing document: {e}")
+            logger.error(f"Error summarizing document: {e}")
             return {
                 'document_id': document_id,
                 'summary': "Error summarizing document",
